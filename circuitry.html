@@ -1,0 +1,123 @@
+<html>
+<link href='https://fonts.googleapis.com/css?family=Anton' rel='stylesheet'>
+<style>
+body {
+	background-color: gray;
+	font-size: 22px;
+	font-family: 'Anton';
+}
+.grid-container {
+	margin: auto;
+	display: grid;
+	grid-template-columns: 101px 101px 101px 101px 101px;
+	background-color: #2196F3;
+	width: 505px;
+	height: 505px;
+	border: 5px solid black;
+}
+img {
+	-webkit-transition: 0.2s ease-in-out;
+	transition: 0.2s ease-in-out;
+	width: 101px;
+	height: 101px;
+}
+</style>
+<div class="grid-container">
+	<img class="crossRotate" id="0" src="./tiles/node.png"/>
+	<img class="crossRotate" id="1" src="./tiles/straight.png"/>
+	<img class="crossRotate" id="2" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="3" src="./tiles/node.png"/>
+	<img class="crossRotate" id="4" src="./tiles/node.png"/>
+	<img class="crossRotate" id="5" src="./tiles/ljoint.png"/>
+	<img class="crossRotate" id="6" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="7" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="8" src="./tiles/ljoint.png"/>
+	<img class="crossRotate" id="9" src="./tiles/ljoint.png"/>
+	<img class="crossRotate" id="10" src="./tiles/node.png"/>
+	<img class="crossRotate" id="11" src="./tiles/node.png"/>
+	<img class="crossRotate" id="12" src="./tiles/power.png"/>
+	<img class="crossRotate" id="13" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="14" src="./tiles/node.png"/>
+	<img class="crossRotate" id="15" src="./tiles/node.png"/>
+	<img class="crossRotate" id="16" src="./tiles/straight.png"/>
+	<img class="crossRotate" id="17" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="18" src="./tiles/tjoint.png"/>
+	<img class="crossRotate" id="19" src="./tiles/ljoint.png"/>
+	<img class="crossRotate" id="20" src="./tiles/node.png"/>
+	<img class="crossRotate" id="21" src="./tiles/straight.png"/>
+	<img class="crossRotate" id="22" src="./tiles/straight.png"/>
+	<img class="crossRotate" id="23" src="./tiles/ljoint.png"/>
+	<img class="crossRotate" id="24" src="./tiles/node.png"/>
+</div>
+<h1 style="margin: auto;text-align: center;">&#9889 C I R C U I T R Y &#9889</h1>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+<script>
+var totalRot = [], trueRot = [], solution = [90,90,90,270,180,90,90,180,90,270,0,0,90,270,270,90,90,270,90,180,90,90,90,270,0], completed=false;
+for(i=0;i<25;i++) {
+	totalRot[i]=90;trueRot[i]=0;
+}
+$( ".crossRotate" ).click(function() {
+	var index = $(this).attr("id");
+    $(this).css("transform","rotate("+totalRot[index]+"deg)");
+	if((totalRot[index])%360==0) {
+		trueRot[index]=0;
+	} else {
+		if(((trueRot[index]+=90)==270) && $(this).attr("src")=="./straight.png") {
+			trueRot[index]=90;
+		}
+	}
+	totalRot[index]+=90;
+	checkWin();
+});
+
+function checkWin() {
+	for(let i=0;i<solution.length;i++) {
+		if(trueRot[i]!=solution[i]) {
+			completed=false;
+			break;
+		} else {
+			completed=true;
+		}
+	}
+	if(completed) {
+		$("img[src='./node.png']").attr('src','./anode.png');
+		setTimeout(function(){alert("Ay you completed it nice job");}, 500)
+	}
+}
+//Generation Alg
+var nodesAmt = random(7,10); nodeLoc = [], occArr = [12];
+for(let i=0;i<nodesAmt;i++) {
+	let val = random(0,24,occArr);
+	switch(val) {
+		case 0:
+		occArr[occArr.length] = 1;
+		break;
+		case 4:
+		occArr[occArr.length] = 3;
+		break;
+		case 20:
+		occArr[occArr.length] = 21;
+		break;
+		case 24:
+		occArr[occArr.length] = 23;
+		break;
+	}
+	nodeLoc[nodeLoc.length] = random(0,24,occArr);
+	occArr[occArr.length] = nodeLoc[nodeLoc.length-1]
+}
+
+
+function random(min,max,occlusion) {
+	this.value = Math.round(Math.random()*(max-min))+min;
+	if(occlusion) {
+		for(let i=0;i<occlusion.length;i++) {
+			if(this.value == occlusion[i]) {
+				this.value = random(min,max,occlusion)
+			}
+		}
+		return this.value;
+	}else
+	return this.value;
+}
+</script>
+</html>
