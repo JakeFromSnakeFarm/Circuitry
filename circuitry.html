@@ -18,10 +18,13 @@ body {
 img {
 	-webkit-transition: 0.2s ease-in-out;
 	transition: 0.2s ease-in-out;
+	user-select: none; /* supported by Chrome and Opera */
+    -webkit-user-select: none; /* Safari */
 	width: 101px;
 	height: 101px;
 }
 </style>
+<body ondragstart="return false" ondrop="return false">
 <div class="grid-container">
 	<img class="crossRotate" id="0" src="./tiles/node.png"/>
 	<img class="crossRotate" id="1" src="./tiles/straight.png"/>
@@ -53,38 +56,39 @@ img {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 <script>
 var totalRot = [], trueRot = [], solution = [90,90,90,270,180,90,90,180,90,270,0,0,90,270,270,90,90,270,90,180,90,90,90,270,0], completed=false;
+
 for(i=0;i<25;i++) {
-	totalRot[i]=90;trueRot[i]=0;
+	totalRot[i]=90;trueRot[i]=0; //Populated totalRot (Array with values for CSS rotation) and trueRot (Array with rotations used to do calculation)
 }
-$( ".crossRotate" ).click(function() {
-	var index = $(this).attr("id");
-    $(this).css("transform","rotate("+totalRot[index]+"deg)");
-	if((totalRot[index])%360==0) {
+$( ".crossRotate" ).click(function() { //When a crossRotate class is clicked run this
+	let index = $(this).attr("id"); //Grab id of the element to use as array location
+    $(this).css("transform","rotate("+totalRot[index]+"deg)"); //Rotate using totalRot value
+	if((totalRot[index])%360==0) { //Check to keep trueRot under mathematical 360 degrees
 		trueRot[index]=0;
 	} else {
-		if(((trueRot[index]+=90)==270) && $(this).attr("src")=="./straight.png") {
-			trueRot[index]=90;
+		if(((trueRot[index]+=90)==270) && $(this).attr("src")=="./tiles/straight.png") {
+			trueRot[index]=90; //Logic to make a straight piece have the same angle when rotated 180 degrees
 		}
 	}
-	totalRot[index]+=90;
+	totalRot[index]+=90; //Add 90 for the next CSS rotation
 	checkWin();
 });
 
 function checkWin() {
 	for(let i=0;i<solution.length;i++) {
-		if(trueRot[i]!=solution[i]) {
+		if(trueRot[i]!=solution[i]) { //Check if piece angle matches hard coded solution
 			completed=false;
 			break;
 		} else {
 			completed=true;
 		}
 	}
-	if(completed) {
-		$("img[src='./node.png']").attr('src','./anode.png');
+	if(completed) { //On win condition change all nodes to lightblue node and give alert
+		$("img[src='./tiles/node.png']").attr('src','./tiles/anode.png');
 		setTimeout(function(){alert("Ay you completed it nice job");}, 500)
 	}
 }
-//Generation Alg
+//Generation Alg (WIP)
 var nodesAmt = random(7,10); nodeLoc = [], occArr = [12];
 for(let i=0;i<nodesAmt;i++) {
 	let val = random(0,24,occArr);
@@ -93,7 +97,7 @@ for(let i=0;i<nodesAmt;i++) {
 		occArr[occArr.length] = 1;
 		break;
 		case 4:
-		occArr[occArr.length] = 3;
+		occArr[occArr.length] = 3; //Logic to prevent a corner node from being blocked off
 		break;
 		case 20:
 		occArr[occArr.length] = 21;
@@ -105,19 +109,24 @@ for(let i=0;i<nodesAmt;i++) {
 	nodeLoc[nodeLoc.length] = random(0,24,occArr);
 	occArr[occArr.length] = nodeLoc[nodeLoc.length-1]
 }
+//Testing
+$(".crossRotate").attr('src','./tiles/straight.png')
+for(let i=0;i<nodeLoc.length;i++) {
+	$("#"+nodeLoc[i]).attr('src','./tiles/node.png')
+}
 
-
-function random(min,max,occlusion) {
+function random(min,max,occlusion) { //Homebrew random function for generating random numbers, occlusion is an array that holds #s our random cant be
 	this.value = Math.round(Math.random()*(max-min))+min;
 	if(occlusion) {
 		for(let i=0;i<occlusion.length;i++) {
 			if(this.value == occlusion[i]) {
-				this.value = random(min,max,occlusion)
+				this.value = random(min,max,occlusion) //Recursive function to cycle until it finds our number
 			}
 		}
 		return this.value;
-	}else
+	} else
 	return this.value;
 }
 </script>
+</body>
 </html>
