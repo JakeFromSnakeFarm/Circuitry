@@ -26,93 +26,223 @@ img {
 </style>
 <body ondragstart="return false" ondrop="return false">
 <div class="grid-container">
-	<img class="crossRotate" id="0" src="./tiles/node.png"/>
-	<img class="crossRotate" id="1" src="./tiles/straight.png"/>
-	<img class="crossRotate" id="2" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="3" src="./tiles/node.png"/>
-	<img class="crossRotate" id="4" src="./tiles/node.png"/>
-	<img class="crossRotate" id="5" src="./tiles/ljoint.png"/>
-	<img class="crossRotate" id="6" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="7" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="8" src="./tiles/ljoint.png"/>
-	<img class="crossRotate" id="9" src="./tiles/ljoint.png"/>
-	<img class="crossRotate" id="10" src="./tiles/node.png"/>
-	<img class="crossRotate" id="11" src="./tiles/node.png"/>
-	<img class="crossRotate" id="12" src="./tiles/power.png"/>
-	<img class="crossRotate" id="13" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="14" src="./tiles/node.png"/>
-	<img class="crossRotate" id="15" src="./tiles/node.png"/>
-	<img class="crossRotate" id="16" src="./tiles/straight.png"/>
-	<img class="crossRotate" id="17" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="18" src="./tiles/tjoint.png"/>
-	<img class="crossRotate" id="19" src="./tiles/ljoint.png"/>
-	<img class="crossRotate" id="20" src="./tiles/node.png"/>
-	<img class="crossRotate" id="21" src="./tiles/straight.png"/>
-	<img class="crossRotate" id="22" src="./tiles/straight.png"/>
-	<img class="crossRotate" id="23" src="./tiles/ljoint.png"/>
-	<img class="crossRotate" id="24" src="./tiles/node.png"/>
+	<img class="crossRotate" id="0" />
+	<img class="crossRotate" id="1" />
+	<img class="crossRotate" id="2" />
+	<img class="crossRotate" id="3" />
+	<img class="crossRotate" id="4" />
+	<img class="crossRotate" id="5" />
+	<img class="crossRotate" id="6" />
+	<img class="crossRotate" id="7" />
+	<img class="crossRotate" id="8" />
+	<img class="crossRotate" id="9" />
+	<img class="crossRotate" id="10" />
+	<img class="crossRotate" id="11" />
+	<img class="crossRotate" id="12" />
+	<img class="crossRotate" id="13" />
+	<img class="crossRotate" id="14" />
+	<img class="crossRotate" id="15" />
+	<img class="crossRotate" id="16" />
+	<img class="crossRotate" id="17" />
+	<img class="crossRotate" id="18" />
+	<img class="crossRotate" id="19" />
+	<img class="crossRotate" id="20" />
+	<img class="crossRotate" id="21" />
+	<img class="crossRotate" id="22" />
+	<img class="crossRotate" id="23" />
+	<img class="crossRotate" id="24" />
 </div>
 <h1 style="margin: auto;text-align: center;">&#9889 C I R C U I T R Y &#9889</h1>
+<div onclick="init()" style="cursor: pointer;">click me to quickly regenerate a puzzle</div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 <script>
-var totalRot = [], trueRot = [], solution = [90,90,90,270,180,90,90,180,90,270,0,0,90,270,270,90,90,270,90,180,90,90,90,270,0], completed=false;
+var solution = [[],[],[],[],[]], pieces = [], power=false, interval, fails;
 
-for(i=0;i<25;i++) {
-	totalRot[i]=90;trueRot[i]=0; //Populated totalRot (Array with values for CSS rotation) and trueRot (Array with rotations used to do calculation)
-}
-$( ".crossRotate" ).click(function() { //When a crossRotate class is clicked run this
-	let index = $(this).attr("id"); //Grab id of the element to use as array location
-    $(this).css("transform","rotate("+totalRot[index]+"deg)"); //Rotate using totalRot value
-	if((totalRot[index])%360==0) { //Check to keep trueRot under mathematical 360 degrees
-		trueRot[index]=0;
-	} else {
-		if(((trueRot[index]+=90)==270) && $(this).attr("src")=="./tiles/straight.png") {
-			trueRot[index]=90; //Logic to make a straight piece have the same angle when rotated 180 degrees
+function Piece(i,j,id) { //Object constructor function
+	this.trueRot = 0; //Var for mathematical 0-360
+	this.cssRot = 90; //Var for CSS rotation that >360
+	this.id = id; //Stores non matrix ID
+	this.index = {i,j} //Stores own index value
+	this.src = null; //Serves as tile type
+	this.connections = []; //0-3 correspond to up,down,left,right respective
+	this.hasUp = false; //Bools used to determine random direction
+	this.hasDown = false;
+	this.hasLeft = false;
+	this.hasRight = false;
+	this.isSetTile = false;
+	//this.connected = false;
+	this.tick = function() {
+		if(!this.isSetTile && this.checkCons()) { //Tiles has to be unset and have <3 connections
+			this.freeRandomDir();
+			fails = 0; //Fails var for ending loop
+		} else {
+			if(fails++==25) //If 25 objects come back unedited, declare the loop over
+				clearInterval(interval)
+			this.setSrc(); //Set the png for every finished tile
 		}
 	}
-	totalRot[index]+=90; //Add 90 for the next CSS rotation
-	checkWin();
-});
+	this.checkCons = function() {
+		if(this.connections.length>=3 || this.connections.length==0) {
+			return false
+		}
+		return true
+	}
+	this.freeRandomDir = function() {
+		let excluded = [], pieceUp, pieceDown, pieceLeft, pieceRight;
+		try {
+			pieceUp = pieces[this.index.i-1][this.index.j]
+		} catch { //Catches error if index is a negative #, otherwise assigns the variable
+			pieceUp=null;
+		}
+		try {
+			pieceDown = pieces[this.index.i+1][this.index.j]
+		} catch {
+			pieceDown=null;
+		}
+		try {
+			pieceLeft = pieces[this.index.i][this.index.j-1]
+		} catch {
+			pieceLeft=null;
+		}
+		try {
+			pieceRight = pieces[this.index.i][this.index.j+1]
+		} catch {
+			pieceRight=null;
+		}
+			if(this.connections.length>0) { //Add connections to random numbers occlusion list
+				for(let i=0;i<this.connections.length;i++) { //For loop to convert to avoid pointers
+					excluded[i]=this.connections[i];
+				}
+			}
+			if(pieceUp==null || pieceUp.connections.length>=1) { //If the neighbor is a wall (null) or exists, dont connecct to him
+				if(!this.hasUp) //If there is an up connection, dont add another 0 to the array
+				excluded[excluded.length] = 0;
+			}
+			if(pieceDown==null || pieceDown.connections.length>=1) {
+				if(!this.hasDown)
+				excluded[excluded.length] = 1;
+			}
+			if(pieceLeft==null || pieceLeft.connections.length>=1) {
+				if(!this.hasLeft)
+				excluded[excluded.length] = 2;
+			}
+			if(pieceRight==null || pieceRight.connections.length>=1) {
+				if(!this.hasRight)
+				excluded[excluded.length] = 3;
+			}
+			if(excluded.length<4) { //If all 4 directions are blocks, then:
+				this.connections[this.connections.length] = random(0,3,excluded); //Reference homebrew random function
+				switch(this.connections[this.connections.length-1]) { //Switch statement for each direction
+					case 0:
+					this.hasUp = true; //Change boolen if this random direction is selected
+					pieceUp.connections[pieceUp.connections.length] = 1; //Assign the respective neighbor the opposite direction
+					pieceUp.hasDown = true; //Assing boolean to neighbor as well, otherwise we get repetition in direction
+					break; //Maybe I should make a function to auto update these boolean every tick :)
+					case 1:
+					this.hasDown = true;
+					pieceDown.connections[pieceDown.connections.length] = 0;
+					pieceDown.hasUp = true;
+					break;
+					case 2:
+					this.hasLeft = true;
+					pieceLeft.connections[pieceLeft.connections.length] = 3;
+					pieceLeft.hasRight = true;
+					break;
+					case 3:
+					this.hasRight = true;
+					pieceRight.connections[pieceRight.connections.length] = 2;
+					pieceRight.hasLeft = true;
+					break;
+				}
+			} else {
+				this.isSetTile = true; //If all neighbors are invalid, quit doing ticks
+			}
+	}
+	this.setSrc = function() {
+		switch(this.connections.length) {
+			case 1:
+				this.src = "node"; //1 connections means is a node
+			break;
+			case 2:
+				if(this.connections[0]>this.connections[1]) { //Simple array sort
+					let temp = this.connections[0];
+					this.connections[0] = this.connections[1];
+					this.connections[1] = temp;
+				}
+				if((this.connections[0]==0 && this.connections[1]==1) || (this.connections[0]==2 && this.connections[1]==3))
+				this.src = "straight"; //If array contains opposites, its a straight
+				else
+				this.src = "ljoint"
+			break;
+			case 3:
+				this.src = "tjoint"; //3 Connections means T
+			break;
+		}
+		if(this.index.i == 2 && this.index.j == 2) { //Hard code to make middle power
+			this.src = "power"
+		}
+		document.getElementById(this.id+"").src = "./tiles/"+this.src+".png";
+	}
+
+}
+
+function init() {
+	$(".crossRotate").css("transform","rotate(0deg)")
+	for(let i=5;i--;) { //Initialize 2d array
+		pieces[i] = [];
+	}
+	for(let i=0,count=0;i<pieces.length;i++) { //Create 25 objects
+		for(let j=0;j<5;j++,count++) {
+			pieces[i][j] = new Piece(i,j,count)
+		}
+	}
+	if(!power) {
+		pieces[2][2].freeRandomDir(); //Start tree
+	}
+	interval = setInterval(generatePuzzle,20); //Function timer
+}
+
+function generatePuzzle() {
+	if(checkMatrix)
+	for(let i=0;i<pieces.length;i++) {
+		for(let j=0;j<pieces[i].length;j++) {
+			pieces[i][j].tick()
+		}
+	}
+}
+
+function checkMatrix() {
+	for(let i=0;i<pieces.length;i++) {
+		for(let j=0;j<pieces[i].length;j++) {
+			if(pieces[i][j].connections.length==0) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function findIndex(id) {
+  let x=Math.floor(id/5), y=id%5; //Translates a base 10 number to a matrix index
+  return {x,y}
+}
 
 function checkWin() {
-	for(let i=0;i<solution.length;i++) {
-		if(trueRot[i]!=solution[i]) { //Check if piece angle matches hard coded solution
-			completed=false;
-			break;
-		} else {
-			completed=true;
-		}
-	}
-	if(completed) { //On win condition change all nodes to lightblue node and give alert
+	if(arraysEqual()) { //Check if piece angle matches hard coded solution
 		$("img[src='./tiles/node.png']").attr('src','./tiles/anode.png');
 		setTimeout(function(){alert("Ay you completed it nice job");}, 500)
 	}
 }
-//Generation Alg (WIP)
-var nodesAmt = random(7,10); nodeLoc = [], occArr = [12];
-for(let i=0;i<nodesAmt;i++) {
-	let val = random(0,24,occArr);
-	switch(val) {
-		case 0:
-		occArr[occArr.length] = 1;
-		break;
-		case 4:
-		occArr[occArr.length] = 3; //Logic to prevent a corner node from being blocked off
-		break;
-		case 20:
-		occArr[occArr.length] = 21;
-		break;
-		case 24:
-		occArr[occArr.length] = 23;
-		break;
+
+function arraysEqual() {
+	for(let i=0;i<pieces.length;i++) {
+		for(let j=0;j<pieces[i].length;j++) {
+			if(pieces[i][j].trueRot!=solution[i][j]) {
+				return false
+			}
+		}
 	}
-	nodeLoc[nodeLoc.length] = random(0,24,occArr);
-	occArr[occArr.length] = nodeLoc[nodeLoc.length-1]
-}
-//Testing
-$(".crossRotate").attr('src','./tiles/straight.png')
-for(let i=0;i<nodeLoc.length;i++) {
-	$("#"+nodeLoc[i]).attr('src','./tiles/node.png')
+	return true
 }
 
 function random(min,max,occlusion) { //Homebrew random function for generating random numbers, occlusion is an array that holds #s our random cant be
@@ -127,6 +257,32 @@ function random(min,max,occlusion) { //Homebrew random function for generating r
 	} else
 	return this.value;
 }
+// var genInc = 0;
+// var genIncN = -1; //USED TO MANUALLY WATCH TICKS PERFORM. SET A DIV TO DO THIS FUNCTION ON CLICK THEN CLICK TO FORWARD THE PROCESS
+// function generatePuzzleManual() {
+// 	if(genIncN++==4) {
+// 		genIncN = 0;
+// 		genInc++;
+// 	}
+// 	if(genInc<5)
+// 	pieces[genInc][genIncN].tick()
+// 	else
+// 	genInc = 0;
+// }
+$( ".crossRotate" ).click(function() { //When a crossRotate class is clicked run this
+	let index = findIndex($(this).attr("id")); //Grab id of the element to use as array location
+    $(this).css("transform","rotate("+pieces[index.x][index.y].cssRot+"deg)"); //Rotate using totalRot value
+	if(pieces[index.x][index.y].cssRot%360==0) { //Check to keep trueRot under mathematical 360 degrees
+		pieces[index.x][index.y].trueRot=0;
+	} else {
+		if(((pieces[index.x][index.y].trueRot+=90)==270) && pieces[index.x][index.y].src == "straight") {
+			pieces[index.x][index.y].trueRot=90; //Logic to make a straight piece have the same angle when rotated 180 degrees
+		}
+	}
+	pieces[index.x][index.y].cssRot+=90; //Add 90 for the next CSS rotation
+	checkWin();
+});
+init();
 </script>
 </body>
 </html>
