@@ -23,40 +23,50 @@ img {
 	width: 101px;
 	height: 101px;
 }
+.newPuz {
+	width: 180px;
+	background-color: rgba(255,0,0,0.7);
+	color: white;
+	border: none;
+	text-align: center;
+	cursor: pointer;
+	border-radius: 3px;
+	border: 2px solid black;
+}
 </style>
 <body ondragstart="return false" ondrop="return false">
 <div class="grid-container">
-	<img class="crossRotate" id="0" />
-	<img class="crossRotate" id="1" />
-	<img class="crossRotate" id="2" />
-	<img class="crossRotate" id="3" />
-	<img class="crossRotate" id="4" />
-	<img class="crossRotate" id="5" />
-	<img class="crossRotate" id="6" />
-	<img class="crossRotate" id="7" />
-	<img class="crossRotate" id="8" />
-	<img class="crossRotate" id="9" />
-	<img class="crossRotate" id="10" />
-	<img class="crossRotate" id="11" />
-	<img class="crossRotate" id="12" />
-	<img class="crossRotate" id="13" />
-	<img class="crossRotate" id="14" />
-	<img class="crossRotate" id="15" />
-	<img class="crossRotate" id="16" />
-	<img class="crossRotate" id="17" />
-	<img class="crossRotate" id="18" />
-	<img class="crossRotate" id="19" />
-	<img class="crossRotate" id="20" />
-	<img class="crossRotate" id="21" />
-	<img class="crossRotate" id="22" />
-	<img class="crossRotate" id="23" />
-	<img class="crossRotate" id="24" />
+	<img class="crossRotate" id="0" src="./tiles/null.png"/>
+	<img class="crossRotate" id="1" src="./tiles/null.png"/>
+	<img class="crossRotate" id="2" src="./tiles/null.png"/>
+	<img class="crossRotate" id="3" src="./tiles/null.png"/>
+	<img class="crossRotate" id="4" src="./tiles/null.png"/>
+	<img class="crossRotate" id="5" src="./tiles/null.png"/>
+	<img class="crossRotate" id="6" src="./tiles/null.png"/>
+	<img class="crossRotate" id="7" src="./tiles/null.png"/>
+	<img class="crossRotate" id="8" src="./tiles/null.png"/>
+	<img class="crossRotate" id="9" src="./tiles/null.png"/>
+	<img class="crossRotate" id="10" src="./tiles/null.png"/>
+	<img class="crossRotate" id="11" src="./tiles/null.png"/>
+	<img class="crossRotate" id="12" src="./tiles/null.png"/>
+	<img class="crossRotate" id="13" src="./tiles/null.png"/>
+	<img class="crossRotate" id="14" src="./tiles/null.png"/>
+	<img class="crossRotate" id="15" src="./tiles/null.png"/>
+	<img class="crossRotate" id="16" src="./tiles/null.png"/>
+	<img class="crossRotate" id="17" src="./tiles/null.png"/>
+	<img class="crossRotate" id="18" src="./tiles/null.png"/>
+	<img class="crossRotate" id="19" src="./tiles/null.png"/>
+	<img class="crossRotate" id="20" src="./tiles/null.png"/>
+	<img class="crossRotate" id="21" src="./tiles/null.png"/>
+	<img class="crossRotate" id="22" src="./tiles/null.png"/>
+	<img class="crossRotate" id="23" src="./tiles/null.png"/>
+	<img class="crossRotate" id="24" src="./tiles/null.png"/>
 </div>
 <h1 style="margin: auto;text-align: center;">&#9889 C I R C U I T R Y &#9889</h1>
-<div onclick="init()" style="cursor: pointer;">click me to quickly regenerate a puzzle</div>
+<div  class="newPuz" onclick="init()" style="cursor: pointer;margin: auto;">New Puzzle</div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 <script>
-var solution = [[],[],[],[],[]], pieces = [], power=false, interval, fails;
+var solution = [], pieces = [], power=false, interval, fails;
 
 function Piece(i,j,id) { //Object constructor function
 	this.trueRot = 0; //Var for mathematical 0-360
@@ -76,8 +86,11 @@ function Piece(i,j,id) { //Object constructor function
 			this.freeRandomDir();
 			fails = 0; //Fails var for ending loop
 		} else {
-			if(fails++==25) //If 25 objects come back unedited, declare the loop over
+			if(fails++==25) {//If 25 objects come back unedited, declare the loop over
 				clearInterval(interval)
+				vectorToSolutionArray();
+			}
+			this.connections.sort(function(a,b){return a-b});
 			this.setSrc(); //Set the png for every finished tile
 		}
 	}
@@ -183,11 +196,54 @@ function Piece(i,j,id) { //Object constructor function
 		}
 		document.getElementById(this.id+"").src = "./tiles/"+this.src+".png";
 	}
-
+	this.calcSolution = function() {
+		if(this.src == "node" || this.src == "straight") {
+			switch(this.connections[this.connections.length-1]) {
+				case 0:
+				return 0;
+				break;
+				case 1:
+				if(this.src == "straight")
+					return 0;
+				else
+					return 180; //Should reassign 0-3 to be cardinals so i can multiple by 90 for answer
+				break; //Or just give hard code solution to reduce run time. I guess less runtime > less code0.
+				case 2:
+				if(this.src == "straight")
+					return 90;
+				else
+					return 270;
+				break;
+				case 3:
+				return 90;
+				break;
+			}
+		} else if(this.src == "ljoint") {
+			if(arraysEqual(this.connections,[1,2])) {
+				return 180;
+			} else if(arraysEqual(this.connections,[1,3])) {
+				return 90;
+			} else if(arraysEqual(this.connections,[0,2])) {
+				return 270;
+			} else {
+				return 0;
+			}
+		}else {
+			if(arraysEqual(this.connections,[1,2,3])) {
+				return 180;
+			} else if(arraysEqual(this.connections,[0,2,3])) {
+				return 0;
+			} else if(arraysEqual(this.connections,[0,1,2])) {
+				return 270;
+			} else {
+				return 90;
+			}
+		}
+	}
 }
 
 function init() {
-	$(".crossRotate").css("transform","rotate(0deg)")
+	$(".crossRotate").css("transform","rotate(0deg)") //Resets rotation. Plans to make a random rotation later
 	for(let i=5;i--;) { //Initialize 2d array
 		pieces[i] = [];
 	}
@@ -199,7 +255,7 @@ function init() {
 	if(!power) {
 		pieces[2][2].freeRandomDir(); //Start tree
 	}
-	interval = setInterval(generatePuzzle,20); //Function timer
+	interval = setInterval(generatePuzzle,50); //Function timer
 }
 
 function generatePuzzle() {
@@ -228,21 +284,36 @@ function findIndex(id) {
 }
 
 function checkWin() {
-	if(arraysEqual()) { //Check if piece angle matches hard coded solution
+	if(arraysEqual(grabCurrentRot(),solution)) { //Check if piece angle matches solution
 		$("img[src='./tiles/node.png']").attr('src','./tiles/anode.png');
 		setTimeout(function(){alert("Ay you completed it nice job");}, 500)
 	}
 }
 
-function arraysEqual() {
+function grabCurrentRot() {
+	let temparr = [];
 	for(let i=0;i<pieces.length;i++) {
 		for(let j=0;j<pieces[i].length;j++) {
-			if(pieces[i][j].trueRot!=solution[i][j]) {
-				return false
-			}
+			temparr[temparr.length] = pieces[i][j].trueRot;
 		}
 	}
-	return true
+	return temparr;
+}
+
+function arraysEqual(a,b) {
+	for (var i = 0; i < a.length; ++i) {
+    	if (a[i] != b[i]) 
+    		return false;
+  	}
+ 	return true;
+}
+
+function vectorToSolutionArray() {
+	for(let i=0,count=0;i<pieces.length;i++) {
+		for(let j=0;j<pieces[i].length;j++,count++) {
+			solution[count] = pieces[i][j].calcSolution();
+		}
+	}
 }
 
 function random(min,max,occlusion) { //Homebrew random function for generating random numbers, occlusion is an array that holds #s our random cant be
@@ -257,18 +328,7 @@ function random(min,max,occlusion) { //Homebrew random function for generating r
 	} else
 	return this.value;
 }
-// var genInc = 0;
-// var genIncN = -1; //USED TO MANUALLY WATCH TICKS PERFORM. SET A DIV TO DO THIS FUNCTION ON CLICK THEN CLICK TO FORWARD THE PROCESS
-// function generatePuzzleManual() {
-// 	if(genIncN++==4) {
-// 		genIncN = 0;
-// 		genInc++;
-// 	}
-// 	if(genInc<5)
-// 	pieces[genInc][genIncN].tick()
-// 	else
-// 	genInc = 0;
-// }
+
 $( ".crossRotate" ).click(function() { //When a crossRotate class is clicked run this
 	let index = findIndex($(this).attr("id")); //Grab id of the element to use as array location
     $(this).css("transform","rotate("+pieces[index.x][index.y].cssRot+"deg)"); //Rotate using totalRot value
