@@ -335,8 +335,12 @@ $(this).css("transform","rotate("+pieces[index.x][index.y].cssRot+"deg)"); //Rot
 if(pieces[index.x][index.y].cssRot%360==0) { //Check to keep trueRot under mathematical 360 degrees
 	pieces[index.x][index.y].trueRot=0;
 } else {
-	if(((pieces[index.x][index.y].trueRot+=90)==270) && pieces[index.x][index.y].src == "straight") {
+	pieces[index.x][index.y].trueRot+=90;
+	if(pieces[index.x][index.y].src == "straight") {
+		if((pieces[index.x][index.y].trueRot==270))
 		pieces[index.x][index.y].trueRot=90; //Logic to make a straight piece have the same angle when rotated 180 degrees
+		if((pieces[index.x][index.y].trueRot==180))
+		pieces[index.x][index.y].trueRot=0; //Logic to make a straight piece have the same angle when rotated 180 degrees
 	}
 }
 pieces[index.x][index.y].cssRot+=90; //Add 90 for the next CSS rotation
