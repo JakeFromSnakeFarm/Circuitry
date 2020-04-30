@@ -268,23 +268,11 @@ img {
     }
 
     function generatePuzzle() {
-        if (checkMatrix)
             for (let i = 0; i < pieces.length; i++) {
                 for (let j = 0; j < pieces[i].length; j++) {
                     pieces[i][j].tick();
                 }
             }
-    }
-
-    function checkMatrix() {
-        for (let i = 0; i < pieces.length; i++) {
-            for (let j = 0; j < pieces[i].length; j++) {
-                if (pieces[i][j].connections.length == 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     function findIndex(id) {
