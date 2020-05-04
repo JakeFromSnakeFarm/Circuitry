@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<link href='https://fonts.googleapis.com/css?family=Anton' rel='stylesheet'>
+<link href="https://fonts.googleapis.com/css?family=Anton" rel="stylesheet">
 <style>
 * {
     -ms-touch-action: manipulation;
@@ -75,6 +75,7 @@ img {
     </div>
     <h1 style="margin: auto;text-align: center;">&#9889 C I R C U I T R Y &#9889</h1>
     <div class="newPuz" onclick="init()" style="cursor: pointer;margin: auto;">New Puzzle</div>
+    <div class="newPuz" onclick="solve()" style="cursor: pointer;margin: auto;">Solve</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script>
     var solution = [],
@@ -263,6 +264,8 @@ img {
         }
         if (!power) {
             pieces[2][2].freeRandomDir(); //Start tree
+            pieces[2][2].freeRandomDir();
+            pieces[2][2].freeRandomDir();//3 times to ensure it has 3 connections
         }
         interval = setInterval(generatePuzzle, 50); //Function timer
     }
@@ -273,7 +276,6 @@ img {
                     pieces[i][j].tick();
                 }
             }
-    }
 
     function findIndex(id) {
         let x = Math.floor(id / 5),
@@ -311,6 +313,12 @@ img {
             for (let j = 0; j < pieces[i].length; j++, count++) {
                 solution[count] = pieces[i][j].calcSolution();
             }
+        }
+    }
+
+    function solve() {
+        for(let i=0;i<solution.length;i++) {
+            $("#"+i).css("transform", "rotate("+solution[i]+"deg)");
         }
     }
 
