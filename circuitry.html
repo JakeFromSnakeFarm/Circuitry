@@ -43,6 +43,9 @@ img {
     text-align: center;
     width: 180px;
 }
+a {
+    text-decoration: none;
+}
 </style>
 
 <body ondragstart="return false" ondrop="return false">
@@ -76,12 +79,14 @@ img {
     <h1 style="margin: auto;text-align: center;">&#9889 C I R C U I T R Y &#9889</h1>
     <div class="newPuz" onclick="init()" style="cursor: pointer;margin: auto;">New Puzzle</div>
     <div class="newPuz" onclick="solve()" style="cursor: pointer;margin: auto;">Solve</div>
+    <a href="http://marinestars.net/jake/games/CircuitryHard"><div class="newPuz" style="cursor: pointer;margin: auto;">Hard Mode: ON</div></a>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script>
     var solution = [],
         pieces = [],
         power = false,
-        interval, fails;
+        toVisitPieces = [],
+        interval;;
 
     function Piece(i, j, id) { //Object constructor function
         this.trueRot = 0; //Var for mathematical 0-360
@@ -99,18 +104,16 @@ img {
         this.tick = function() {
             if (!this.isSetTile && this.checkCons()) { //Tiles has to be unset and have <3 connections
                 this.freeRandomDir();
-                fails = 0; //Fails var for ending loop
             } else {
-                if (fails++ == 25) { //If 25 objects come back unedited, declare the loop over
-                    clearInterval(interval);
-                    vectorToSolutionArray();
-                }
                 this.connections.sort(function(a, b) { return a - b });
                 this.setSrc(); //Set the png for every finished tile
             }
         };
         this.checkCons = function() {
             if (this.connections.length >= 3 || this.connections.length == 0) {
+                if (this.connections.length >= 3) {
+                    this.tileSet();
+                }
                 return false;
             }
             return true;
@@ -166,25 +169,29 @@ img {
                         this.hasUp = true; //Change boolen if this random direction is selected
                         pieceUp.connections[pieceUp.connections.length] = 1; //Assign the respective neighbor the opposite direction
                         pieceUp.hasDown = true; //Assing boolean to neighbor as well, otherwise we get repetition in direction
+                        toVisitPieces[toVisitPieces.length] = pieceUp.index;
                         break; //Maybe I should make a function to auto update these boolean every tick :)
                     case 1:
                         this.hasDown = true;
                         pieceDown.connections[pieceDown.connections.length] = 0;
                         pieceDown.hasUp = true;
+                        toVisitPieces[toVisitPieces.length] = pieceDown.index;
                         break;
                     case 2:
                         this.hasLeft = true;
                         pieceLeft.connections[pieceLeft.connections.length] = 3;
                         pieceLeft.hasRight = true;
+                        toVisitPieces[toVisitPieces.length] = pieceLeft.index;
                         break;
                     case 3:
                         this.hasRight = true;
                         pieceRight.connections[pieceRight.connections.length] = 2;
                         pieceRight.hasLeft = true;
+                        toVisitPieces[toVisitPieces.length] = pieceRight.index;
                         break;
                 }
             } else {
-                this.isSetTile = true; //If all neighbors are invalid, quit doing ticks
+                this.tileSet(); //If all neighbors are invalid, quit doing ticks
             }
         };
         this.setSrc = function() {
@@ -250,10 +257,19 @@ img {
                 }
             }
         };
+
+        this.tileSet = function() {
+            if (!this.wasSpliced) {
+                splicePiece(this.index);
+                this.isSetTile = true;
+                this.setSrc();
+            }
+        }
     }
 
     function init() {
         $(".crossRotate").css("transform", "rotate(0deg)"); //Resets rotation. Plans to make a random rotation later
+        toVisitPieces = [];
         for (let i = 5; i--;) { //Initialize 2d array
             pieces[i] = [];
         }
@@ -266,16 +282,24 @@ img {
             pieces[2][2].freeRandomDir(); //Start tree
             pieces[2][2].freeRandomDir();
             pieces[2][2].freeRandomDir();//3 times to ensure it has 3 connections
+            pieces[2][2].tick();
         }
-        interval = setInterval(generatePuzzle, 50); //Function timer
+        interval = setInterval(generatePuzzle, 5); //Function timer
     }
 
     function generatePuzzle() {
-            for (let i = 0; i < pieces.length; i++) {
-                for (let j = 0; j < pieces[i].length; j++) {
-                    pieces[i][j].tick();
-                }
-            }
+        if (toVisitPieces.length != 0) {
+            let index = toVisitPieces[random(0, toVisitPieces.length - 1)];
+            pieces[index.i][index.j].tick();
+        } else {
+            clearInterval(interval);
+            vectorToSolutionArray();
+        }
+    }
+
+    function hardmode() {
+
+    }
 
     function findIndex(id) {
         let x = Math.floor(id / 5),
@@ -306,6 +330,16 @@ img {
                 return false;
         }
         return true;
+    }
+
+    function splicePiece(index) {
+        for (let i = 0; i < toVisitPieces.length; i++) {
+            if (toVisitPieces[i] == index) {
+                $("#" + index.id).css("background-color", "#2196F3")
+                toVisitPieces.splice(i, 1)
+                break;
+            }
+        }
     }
 
     function vectorToSolutionArray() {
